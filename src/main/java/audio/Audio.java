@@ -42,7 +42,7 @@ public class Audio {
         }
     }
 
-    public boolean isRightFormat(AudioFormat audioFormat){
+    private boolean isRightFormat(AudioFormat audioFormat){
         return (bitRate == 16) && (sampleRate == 44100); // && (numberOfChannels == 1)
     }
 
@@ -56,7 +56,7 @@ public class Audio {
 
     public double getDecibel(int sampleNumber){
         int amplitude = getAmplitude(sampleNumber);
-        return amplitude == 0 ? 0 : (20 * Math.log10(amplitude));
+        return amplitude == 0 ? 0 : (20 * Math.log10(Math.abs(amplitude)));
     }
 
 //    public int getAmplitude(int sampleNumber) {
@@ -73,17 +73,31 @@ public class Audio {
     public int getAmplitude(int sampleNumber){
         int result = 0;
         if (isBigEndian) {
-            for (int i = 0; i < sampleSize; ++i) {
-                byte MSB = data[sampleNumber * sampleSize + i];
-                byte LSB = data[sampleNumber * sampleSize + i + 1];
-                result = MSB << 8 | (255 & LSB);
-            }
+           result = getBigEndianAmplitude(sampleNumber);
         } else {
-            for (int i = 0; i < sampleSize; i += 2) {
-                byte LSB = data[sampleNumber * sampleSize + i];
-                byte MSB = data[sampleNumber * sampleSize + i + 1];
-                result = MSB << 8 | (255 & LSB);
-            }
+           result = getLittleEndianAmplitude(sampleNumber);
+        }
+        return result;
+    }
+
+    private int getLittleEndianAmplitude(int sampleNumber) {
+        int result = 0;
+        for (int i = 0; i < sampleSize; i += 2) {
+            int index = sampleNumber * sampleSize * numberOfChannels + i;
+            byte LSB = data[index];
+            byte MSB = data[index + 1];
+            result = MSB << 8 | (255 & LSB);
+        }
+        return result;
+    }
+    
+    private int getBigEndianAmplitude(int sampleNumber){
+        int result = 0; 
+        for (int i = 0; i < sampleSize; ++i) {
+            int index = sampleNumber * sampleSize * numberOfChannels + i;
+            byte MSB = data[index];
+            byte LSB = data[index + 1];
+            result = MSB << 8 | (255 & LSB);
         }
         return result;
     }
@@ -91,7 +105,8 @@ public class Audio {
     private boolean isValidSampleNumber(int sampleNumber) {
         return !(sampleNumber < 0 || sampleNumber >= data.length / sampleSize);
     }
-
+    
+    @Override
     public String toString(){
         String result = "";
         result += "sampleRate: \t\t" + sampleRate + "\n";

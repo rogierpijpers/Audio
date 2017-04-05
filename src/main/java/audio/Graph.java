@@ -30,24 +30,31 @@ public class Graph extends Application {
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setCreateSymbols(false);
         XYChart.Series series = new XYChart.Series();
-        File file = new File( "D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
+        //File file = new File( "D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
+        File file = new File( "D:\\Sources\\Hans audio graph\\WavReader\\sine.wav");
         Audio wav = new Audio(file);
 
         int duration = wav.getDurationInMilliSeconds();
         int yIndex = 0;
+        int maxAmp = 0; 
+        
+        for (int i = 0; i < wav.getNumberOfSamples(); i += (wav.getNumberOfSamples() / duration)) {
 
-        for (int i = 0; i < wav.getNumberOfSamples(); i += wav.getNumberOfSamples() / 44100 / 10) {
+//            System.out.println("Duration: " + duration);
+//            System.out.println("Number of samples: " + wav.getNumberOfSamples());
+//            System.out.println("Stepsize: " + duration / wav.getNumberOfSamples());
+//            System.out.println("dB: " + wav.getDecibel(i));
+//            System.out.println("Amplitude: " + wav.getAmplitude(i));
+            
+            if(wav.getAmplitude(i) > maxAmp){
+                maxAmp = wav.getAmplitude(i);
+            }
 
-            System.out.println("Duration: " + duration);
-            System.out.println("Number of samples: " + wav.getNumberOfSamples());
-            System.out.println("Stepsize: " + duration / wav.getNumberOfSamples());
-            System.out.println("dB: " + wav.getDecibel(i));
-            System.out.println("Amplitude: " + wav.getAmplitude(i));
-
-
-            series.getData().add(new XYChart.Data(yIndex, (int) wav.getAmplitude(i)));
+            series.getData().add(new XYChart.Data(yIndex, wav.getAmplitude(i)));
             yIndex++;
         }
+        
+        System.out.println("MaxAmp: \t" + maxAmp);
 
         lineChart.getData().add(series);
         root.getChildren().add(lineChart);
