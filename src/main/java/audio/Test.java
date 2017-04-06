@@ -11,11 +11,11 @@ public class Test {
     public static void main(String[] args) throws IOException, UnsupportedAudioFileException {
         try {
             //File file = new File("D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
-            File file = new File("C:\\Users\\Hans\\Documents\\NetBeansProjects\\WavReader\\WavReader\\sine.wav");
+            File file = new File("D:\\Sources\\Hans audio graph\\WavReader\\sine.wav");
             Audio wav = new Audio(file);
 
             for (int i = 0; i < wav.getNumberOfSamples(); i ++) {
-                System.out.println((int) wav.getAmplitude()[i]);
+                System.out.println((int) wav.getAmplitude(i));
             }
 
             System.out.println(wav.toString());
