@@ -30,15 +30,19 @@ public class Graph extends Application {
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setCreateSymbols(false);
         XYChart.Series series = new XYChart.Series();
-        //File file = new File( "D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
-        File file = new File("D:\\Sources\\Hans audio graph\\WavReader\\sine.wav");
+        File file = new File( "D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
+        //File file = new File("D:\\Sources\\Hans audio graph\\WavReader\\sine.wav");
         //File file = new File( "C:\\Users\\Hans\\Documents\\NetBeansProjects\\WavReader\\WavReader\\sine.wav");
         Audio wav = new Audio(file);
 
         int duration = wav.getDurationInMilliSeconds();
         int timeValue = 0;
-        int maxAmp = 0; 
-
+        int maxAmp = 0;
+        int threshHold = 100;
+        int startSilence = 0;
+        int stopSilence = 0;
+        boolean silenceStarted = false;
+        
         for (int i = 0; i < wav.getNumberOfSamples(); i += (wav.getNumberOfSamples() / duration)) {
               int amplitudeValue = wav.getAmplitude(i);
             
@@ -51,9 +55,34 @@ public class Graph extends Application {
             if(amplitudeValue > maxAmp){
                 maxAmp = amplitudeValue;
             }
+            
+            boolean isSilent = amplitudeValue < threshHold && amplitudeValue > -threshHold;
+            if(isSilent && !silenceStarted){
+                startSilence = i;
+                silenceStarted = true;
+            }
+            
+            if(!isSilent){
+                stopSilence = i;
+                if(stopSilence - startSilence > 500){
+                    System.out.println("Silence detected.");
+                    System.out.println("Start silence: \t" + startSilence);
+                    System.out.println("Stop silence: \t" + stopSilence);
+                }
+                silenceStarted = false;
+            }
 
             series.getData().add(new XYChart.Data(timeValue, amplitudeValue));
             timeValue++;
+//            
+//            if(stopSilence != 0 && startSilence != 0){
+//                System.out.println("Silence detected.");
+//                System.out.println("Start silence: \t" + startSilence);
+//                System.out.println("Stop silence: \t" + stopSilence);
+//                startSilence = 0;
+//                stopSilence = 0;
+//                silenceDuration = 0;
+//            }
         }
         
         lineChart.getData().add(series);
