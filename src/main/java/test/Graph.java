@@ -1,6 +1,7 @@
 
-package audio;
+package test;
 
+import audio.Audio;
 import java.io.File;
 import java.io.IOException;
 
@@ -38,10 +39,6 @@ public class Graph extends Application {
         int duration = wav.getDurationInMilliSeconds();
         int timeValue = 0;
         int maxAmp = 0;
-        int threshHold = 100;
-        int startSilence = 0;
-        int stopSilence = 0;
-        boolean silenceStarted = false;
         
         for (int i = 0; i < wav.getNumberOfSamples(); i += (wav.getNumberOfSamples() / duration)) {
               int amplitudeValue = wav.getAmplitude(i);
@@ -54,22 +51,6 @@ public class Graph extends Application {
 
             if(amplitudeValue > maxAmp){
                 maxAmp = amplitudeValue;
-            }
-            
-            boolean isSilent = amplitudeValue < threshHold && amplitudeValue > -threshHold;
-            if(isSilent && !silenceStarted){
-                startSilence = i;
-                silenceStarted = true;
-            }
-            
-            if(!isSilent && silenceStarted){
-                stopSilence = i;
-                if(stopSilence - startSilence > 500){
-                    System.out.println("Silence detected.");
-                    System.out.println("Start silence: \t" + startSilence);
-                    System.out.println("Stop silence: \t" + stopSilence);
-                }
-                silenceStarted = false;
             }
 
             series.getData().add(new XYChart.Data(timeValue, amplitudeValue));

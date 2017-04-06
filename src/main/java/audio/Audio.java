@@ -20,29 +20,25 @@ public class Audio {
     private boolean isBigEndian;
 
     public Audio(File wavFile) throws UnsupportedAudioFileException, IOException {
-        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(wavFile);
-        AudioFormat audioFormat = audioInputStream.getFormat();
-
-        numberOfSamples = (int) audioInputStream.getFrameLength();
-        System.out.println(numberOfSamples);
-        sampleRate = (int) audioFormat.getSampleRate();
-        bitRate = audioFormat.getSampleSizeInBits();
-        numberOfChannels = audioFormat.getChannels();
-        sampleSize = bitRate / 8;
-        isBigEndian = audioFormat.isBigEndian();
-
-        int dataLength = (int) audioInputStream.getFrameLength() * audioFormat.getSampleSizeInBits() * numberOfChannels / 8;
-        data = new byte[dataLength];
-        audioInputStream.read(data);
-        audioInputStream.close();
+        AudioFormat audioFormat;
+        try (AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(wavFile)) {
+            audioFormat = audioInputStream.getFormat();
+            
+            numberOfSamples = (int) audioInputStream.getFrameLength();
+            sampleRate = (int) audioFormat.getSampleRate();
+            bitRate = audioFormat.getSampleSizeInBits();
+            numberOfChannels = audioFormat.getChannels();
+            sampleSize = bitRate / 8;
+            isBigEndian = audioFormat.isBigEndian();
+            
+            int dataLength = (int) audioInputStream.getFrameLength() * audioFormat.getSampleSizeInBits() * numberOfChannels / 8;
+            data = new byte[dataLength];
+            audioInputStream.read(data);
+        }
 
         if(!isRightFormat(audioFormat)){
             throw new UnsupportedAudioFileException();
         }
-    }
-    
-    public byte[] getData(){
-        return data;
     }
 
     private boolean isRightFormat(AudioFormat audioFormat){

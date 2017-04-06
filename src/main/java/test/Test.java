@@ -1,5 +1,6 @@
-package audio;
+package test;
 
+import audio.Audio;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
