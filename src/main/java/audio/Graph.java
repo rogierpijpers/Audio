@@ -62,7 +62,7 @@ public class Graph extends Application {
                 silenceStarted = true;
             }
             
-            if(!isSilent){
+            if(!isSilent && silenceStarted){
                 stopSilence = i;
                 if(stopSilence - startSilence > 500){
                     System.out.println("Silence detected.");
@@ -74,15 +74,6 @@ public class Graph extends Application {
 
             series.getData().add(new XYChart.Data(timeValue, amplitudeValue));
             timeValue++;
-//            
-//            if(stopSilence != 0 && startSilence != 0){
-//                System.out.println("Silence detected.");
-//                System.out.println("Start silence: \t" + startSilence);
-//                System.out.println("Stop silence: \t" + stopSilence);
-//                startSilence = 0;
-//                stopSilence = 0;
-//                silenceDuration = 0;
-//            }
         }
         
         lineChart.getData().add(series);
