@@ -16,7 +16,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
  *
- * @author Hans
+ * @author Hans & Rogier
  */
 public class Graph extends Application {
 
@@ -31,13 +31,13 @@ public class Graph extends Application {
         lineChart.setCreateSymbols(false);
         XYChart.Series series = new XYChart.Series();
         //File file = new File( "D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
-        File file = new File( "D:\\Sources\\Hans audio graph\\WavReader\\sine.wav");
+        File file = new File( "C:\\Users\\Hans\\Documents\\NetBeansProjects\\WavReader\\WavReader\\sine.wav");
         Audio wav = new Audio(file);
 
         int duration = wav.getDurationInMilliSeconds();
-        int yIndex = 0;
+        int timeValue = 0;
         int maxAmp = 0; 
-        
+        int[] amplitudeArray = wav.getAmplitude();
         for (int i = 0; i < wav.getNumberOfSamples(); i += (wav.getNumberOfSamples() / duration)) {
 
 //            System.out.println("Duration: " + duration);
@@ -45,23 +45,23 @@ public class Graph extends Application {
 //            System.out.println("Stepsize: " + duration / wav.getNumberOfSamples());
 //            System.out.println("dB: " + wav.getDecibel(i));
 //            System.out.println("Amplitude: " + wav.getAmplitude(i));
-            
-            if(wav.getAmplitude(i) > maxAmp){
-                maxAmp = wav.getAmplitude(i);
+            int amplitudeValue = amplitudeArray[i];
+//            System.out.println(amplitudeValue);
+            if(amplitudeValue > maxAmp){
+                maxAmp = amplitudeValue;
             }
 
-            series.getData().add(new XYChart.Data(yIndex, wav.getAmplitude(i)));
-            yIndex++;
+            series.getData().add(new XYChart.Data(timeValue, amplitudeValue));
+            timeValue++;
         }
         
         System.out.println("MaxAmp: \t" + maxAmp);
-
         lineChart.getData().add(series);
         root.getChildren().add(lineChart);
 
         Scene scene = new Scene(root, 300, 250);
 
-        primaryStage.setTitle("Hello World!");
+        primaryStage.setTitle("WavPlot");
         primaryStage.setScene(scene);
 
         primaryStage.show();
