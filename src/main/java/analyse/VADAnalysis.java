@@ -12,38 +12,50 @@ import audio.Audio;
  * @author Rogier
  */
 public class VADAnalysis {
+
     private static final int AMPLITUDE_THRESHOLD = 100;
     private static final int TIME_THRESHOLD_MS = 100;
-    
-    public void analyse(Audio audio){
+
+    public void analyse(Audio audio) {
         int numberOfSilences = 0;
         int totalLengthOfSilence = 0;
-        
-        boolean silenceStarted = false;
         int startSilence = 0;
         int stopSilence = 0;
         int timeInMs = 0;
-        for (int i = 0; i < audio.getNumberOfSamples(); i += (audio.getNumberOfSamples() / audio.getDurationInMilliSeconds())) {
-            int amplitudeValue = audio.getAmplitude(i);
-        
-            boolean isSilent = amplitudeValue < AMPLITUDE_THRESHOLD && amplitudeValue > -AMPLITUDE_THRESHOLD;
-            if(isSilent && !silenceStarted){
+        int amplitudeValue;
+        boolean silenceStarted = false;
+        boolean isSilent;
+        boolean lastIteration;
+        int numberOfSamples = audio.getNumberOfSamples();
+        int durationInMilliSeconds = audio.getDurationInMilliSeconds();
+
+        for (int i = 0; i < numberOfSamples; i += (numberOfSamples / durationInMilliSeconds)) {
+
+            amplitudeValue = audio.getAmplitude(i);
+            isSilent = amplitudeValue < AMPLITUDE_THRESHOLD && amplitudeValue > -AMPLITUDE_THRESHOLD;
+            lastIteration = i + (numberOfSamples / durationInMilliSeconds) >= numberOfSamples;
+
+            if (isSilent && !silenceStarted) {
                 startSilence = timeInMs;
                 silenceStarted = true;
             }
-            
-            boolean lastIteration = i + (audio.getNumberOfSamples() / audio.getDurationInMilliSeconds()) >= audio.getNumberOfSamples();
-            if((!isSilent || lastIteration) && silenceStarted){
+
+            if ((!isSilent || lastIteration) && silenceStarted) {
                 stopSilence = timeInMs;
-                if(stopSilence - startSilence > TIME_THRESHOLD_MS || lastIteration){
+                if (stopSilence - startSilence > TIME_THRESHOLD_MS || lastIteration) {
                     totalLengthOfSilence += stopSilence - startSilence;
                     numberOfSilences++;
                 }
                 silenceStarted = false;
-            }   
+            }
+
             timeInMs++;
         }
-        
+
+        toString(audio, totalLengthOfSilence, numberOfSilences);
+    }
+
+    private void toString(Audio audio, int totalLengthOfSilence, int numberOfSilences) {
         System.out.println("\n--- Silence statistics ---");
         System.out.println("Total time in ms: \t" + audio.getDurationInMilliSeconds());
         System.out.println("Total silence in ms: \t" + totalLengthOfSilence);
