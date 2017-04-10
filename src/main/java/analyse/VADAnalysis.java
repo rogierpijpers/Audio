@@ -57,6 +57,10 @@ public class VADAnalysis {
         }
     }
     
+    public float getSilencePercentage(){
+        return (totalLengthOfSilence * 100.0f) / audio.getDurationInMilliSeconds();
+    }
+    
     @Override
     public String toString() {
         String result = "";
@@ -64,7 +68,7 @@ public class VADAnalysis {
         result += "Total time in ms: \t" + audio.getDurationInMilliSeconds() + "\n";
         result += "Total silence in ms: \t" + totalLengthOfSilence + "\n";
         result += "Number of silences: \t" + numberOfSilences + "\n";
-        result += "Silence percentage: \t" + (totalLengthOfSilence * 100.0f) / audio.getDurationInMilliSeconds() + "\n";
+        result += "Silence percentage: \t" + getSilencePercentage() + "\n";
         return result;
     }
 }
