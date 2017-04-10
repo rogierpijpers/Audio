@@ -13,7 +13,7 @@ import audio.Audio;
  */
 public class VADAnalysis {
     private static final int AMPLITUDE_THRESHOLD = 100;
-    private static final int TIME_THRESHOLD_MS = 100;
+    private static final int TIME_THRESHOLD_MS = 1000;
     private final Audio audio;
     private final int numberOfSamples;
     private final int durationInMilliSeconds;
