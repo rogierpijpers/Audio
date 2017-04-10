@@ -46,7 +46,7 @@ public class VADAnalysis {
 
             if ((!isSilent || lastIteration) && silenceStarted) {
                 int stopSilence = timeInMs;
-                if (stopSilence - startSilence > TIME_THRESHOLD_MS || lastIteration) {
+                if (stopSilence - startSilence > TIME_THRESHOLD_MS) {
                     totalLengthOfSilence += stopSilence - startSilence;
                     numberOfSilences++;
                 }
