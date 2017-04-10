@@ -17,19 +17,17 @@ public class Audio {
     private int numberOfChannels;
     private int numberOfSamples;
     private byte[] data;
-    private boolean isBigEndian;
 
     public Audio(File wavFile) throws UnsupportedAudioFileException, IOException {
         AudioFormat audioFormat;
         try (AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(wavFile)) {
             audioFormat = audioInputStream.getFormat();
-            
+
             numberOfSamples = (int) audioInputStream.getFrameLength();
             sampleRate = (int) audioFormat.getSampleRate();
             bitRate = audioFormat.getSampleSizeInBits();
             numberOfChannels = audioFormat.getChannels();
             sampleSize = bitRate / 8;
-            isBigEndian = audioFormat.isBigEndian();
             
             int dataLength = (int) audioInputStream.getFrameLength() * audioFormat.getSampleSizeInBits() * numberOfChannels / 8;
             data = new byte[dataLength];

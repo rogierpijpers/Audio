@@ -20,7 +20,8 @@ public class AnalysisTest {
         File file = new File("D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
         Audio wav = new Audio(file);
         
-        VADAnalysis analysis = new VADAnalysis();
-        analysis.analyse(wav);
+        VADAnalysis analysis = new VADAnalysis(wav);
+        analysis.analyse();
+        System.out.println(analysis.toString());
     }
 }
