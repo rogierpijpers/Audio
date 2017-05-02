@@ -5,6 +5,7 @@
  */
 package test;
 
+import analyse.AnalysisResult;
 import analyse.VADAnalysis;
 import audio.Audio;
 import java.io.File;
@@ -17,11 +18,12 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  */
 public class AnalysisTest {
     public static void main(String[] args) throws UnsupportedAudioFileException, IOException{
-        File file = new File("D:\\Sources\\speech-recognition\\resources\\jennifer.wav");
+        File file = new File("resources/jennifer.wav");
         Audio wav = new Audio(file);
+        System.out.println(wav.toString());
         
         VADAnalysis analysis = new VADAnalysis(wav);
-        analysis.analyse();
-        System.out.println(analysis.toString());
+        AnalysisResult result = analysis.analyse();
+        System.out.println(result.getResultDescription());
     }
 }

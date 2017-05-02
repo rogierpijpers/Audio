@@ -35,7 +35,7 @@ public class Audio {
         }
 
         if(!isRightFormat(audioFormat)){
-            throw new UnsupportedAudioFileException();
+            //throw new UnsupportedAudioFileException();
         }
     }
 

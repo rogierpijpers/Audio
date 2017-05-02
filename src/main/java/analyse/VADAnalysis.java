@@ -13,7 +13,7 @@ import audio.Audio;
  */
 public class VADAnalysis {
     private static final int AMPLITUDE_THRESHOLD = 100;
-    private static final int TIME_THRESHOLD_MS = 1000;
+    private static final int TIME_THRESHOLD_MS = 100;
     private final Audio audio;
     private final int numberOfSamples;
     private final int durationInMilliSeconds;
@@ -28,7 +28,7 @@ public class VADAnalysis {
         this.durationInMilliSeconds = audio.getDurationInMilliSeconds();
     }
     
-    public void analyse() {
+    public AnalysisResult analyse() {
         boolean silenceStarted = false;
         boolean lastIteration;
         int startSilence = 0;
@@ -55,20 +55,27 @@ public class VADAnalysis {
 
             timeInMs++;
         }
+        AnalysisResult result = new AnalysisResult(getSilencePercentage(), "percent", toString());
+        return result;
     }
     
     public float getSilencePercentage(){
         return (totalLengthOfSilence * 100.0f) / audio.getDurationInMilliSeconds();
     }
     
+    public float getAverageSilenceLength(){
+        return ( totalLengthOfSilence > 0 ) ? ( totalLengthOfSilence / numberOfSilences ) : 0;
+    }
+    
     @Override
     public String toString() {
         String result = "";
         result += "\n--- Silence statistics --- \n";
-        result += "Total time in ms: \t" + audio.getDurationInMilliSeconds() + "\n";
-        result += "Total silence in ms: \t" + totalLengthOfSilence + "\n";
-        result += "Number of silences: \t" + numberOfSilences + "\n";
-        result += "Silence percentage: \t" + getSilencePercentage() + "\n";
+        result += "Total time in ms: \t\t" + audio.getDurationInMilliSeconds() + "\n";
+        result += "Total silence in ms: \t\t" + totalLengthOfSilence + "\n";
+        result += "Number of silences: \t\t" + numberOfSilences + "\n";
+        result += "Silence percentage: \t\t" + getSilencePercentage() + "\n";
+        result += "Average silence length: \t" + getAverageSilenceLength() + "\n";
         return result;
     }
 }
