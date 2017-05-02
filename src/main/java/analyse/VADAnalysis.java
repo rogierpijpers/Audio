@@ -19,6 +19,7 @@ public class VADAnalysis {
     private final int durationInMilliSeconds;
     private int totalLengthOfSilence;
     private int numberOfSilences;
+    private final int stepSize;
     
     public VADAnalysis(Audio audio){
         this.audio = audio;
@@ -26,25 +27,23 @@ public class VADAnalysis {
         this.numberOfSilences = 0;
         this.numberOfSamples = audio.getNumberOfSamples();
         this.durationInMilliSeconds = audio.getDurationInMilliSeconds();
+        this.stepSize = (numberOfSamples / durationInMilliSeconds); // 1ms
     }
     
     public AnalysisResult analyse() {
         boolean silenceStarted = false;
-        boolean lastIteration;
         int startSilence = 0;
         int timeInMs = 0;
 
-        for (int i = 0; i < numberOfSamples; i += (numberOfSamples / durationInMilliSeconds)) {
+        for (int i = 0; i < numberOfSamples; i += stepSize) {
             int amplitudeValue = audio.getAmplitude(i);
-            boolean isSilent = amplitudeValue < AMPLITUDE_THRESHOLD && amplitudeValue > -AMPLITUDE_THRESHOLD;
-            lastIteration = i + (numberOfSamples / durationInMilliSeconds) >= numberOfSamples;
-
-            if (isSilent && !silenceStarted) {
+            
+            if (isSilent(amplitudeValue) && !silenceStarted) {
                 startSilence = timeInMs;
                 silenceStarted = true;
             }
 
-            if ((!isSilent || lastIteration) && silenceStarted) {
+            if ((!isSilent(amplitudeValue) || isLastIteration(i)) && silenceStarted) {
                 int stopSilence = timeInMs;
                 if (stopSilence - startSilence > TIME_THRESHOLD_MS) {
                     totalLengthOfSilence += stopSilence - startSilence;
@@ -52,12 +51,21 @@ public class VADAnalysis {
                 }
                 silenceStarted = false;
             }
-
             timeInMs++;
         }
         AnalysisResult result = new AnalysisResult(getSilencePercentage(), "percent", toString());
         return result;
     }
+    
+    private boolean isLastIteration(int index){
+        return ( index + stepSize ) >= numberOfSamples;
+    }
+    
+    private boolean isSilent(int amplitudeValue){
+        return amplitudeValue < AMPLITUDE_THRESHOLD && amplitudeValue > -AMPLITUDE_THRESHOLD;
+    }
+    
+    // following getters can be used after analysis
     
     public float getSilencePercentage(){
         return (totalLengthOfSilence * 100.0f) / audio.getDurationInMilliSeconds();
