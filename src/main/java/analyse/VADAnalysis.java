@@ -13,7 +13,6 @@ import audio.Audio;
  */
 public class VADAnalysis {
     private static final int AMPLITUDE_THRESHOLD = 100;
-    private static final int TIME_THRESHOLD_MS = 100;
     private final Audio audio;
     private final int numberOfSamples;
     private final int durationInMilliSeconds;
@@ -47,10 +46,8 @@ public class VADAnalysis {
 
             if ((!isSilent(amplitudeValue) || isLastIteration(i)) && silenceStarted) {
                 int stopSilence = timeInMs;
-                if (stopSilence - startSilence > TIME_THRESHOLD_MS) {
-                    totalLengthOfSilence += stopSilence - startSilence;
-                    numberOfSilences++;
-                }
+                totalLengthOfSilence += stopSilence - startSilence;
+                numberOfSilences++;
                 silenceStarted = false;
             }
             timeInMs += 10;
