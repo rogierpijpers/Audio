@@ -27,16 +27,18 @@ public class VADAnalysis {
         this.numberOfSilences = 0;
         this.numberOfSamples = audio.getNumberOfSamples();
         this.durationInMilliSeconds = audio.getDurationInMilliSeconds();
-        this.stepSize = (numberOfSamples / durationInMilliSeconds); // 1ms
+        this.stepSize = 441;//(numberOfSamples / durationInMilliSeconds); // 1ms
     }
     
     public AnalysisResult analyse() {
         boolean silenceStarted = false;
         int startSilence = 0;
         int timeInMs = 0;
-
+        
         for (int i = 0; i < numberOfSamples; i += stepSize) {
-            int amplitudeValue = audio.getAmplitude(i);
+            // create envelope
+            int endSample = isLastIteration(i) ? audio.getNumberOfSamples() : i + stepSize;
+            int amplitudeValue = audio.getMaxAmplitude(i, endSample);
             
             if (isSilent(amplitudeValue) && !silenceStarted) {
                 startSilence = timeInMs;
@@ -51,7 +53,7 @@ public class VADAnalysis {
                 }
                 silenceStarted = false;
             }
-            timeInMs++;
+            timeInMs += 10;
         }
         AnalysisResult result = new AnalysisResult(getSilencePercentage(), "percent", toString());
         return result;

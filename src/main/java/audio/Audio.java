@@ -9,6 +9,9 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Audio {
     private int sampleRate;
@@ -62,7 +65,15 @@ public class Audio {
         byte MSB = data[index + 1];
         return MSB << 8 | (255 & LSB);
     }
-
+    
+    public int getMaxAmplitude(int startSample, int endSample){
+        List<Integer> ampList = new ArrayList<>();
+        for(int y = startSample; y < endSample; y++){
+            ampList.add(this.getAmplitude(y));
+        }
+        return Collections.max(ampList);
+    }
+    
     private boolean isValidSampleNumber(int sampleNumber) {
         return !(sampleNumber < 0 || sampleNumber >= data.length / sampleSize);
     }
