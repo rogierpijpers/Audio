@@ -49,6 +49,10 @@ public class Audio {
     public int getNumberOfSamples(){
         return numberOfSamples;
     }
+    
+    public int getSampleRate(){
+        return sampleRate;
+    }
 
     public int getDurationInMilliSeconds(){
         return numberOfSamples / (sampleRate / 1000);

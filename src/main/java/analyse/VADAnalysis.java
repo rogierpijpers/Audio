@@ -12,66 +12,48 @@ import audio.Audio;
  * @author Rogier
  */
 public class VADAnalysis {
-    private static final int AMPLITUDE_THRESHOLD = 100;
+    private static final int AMPLITUDE_THRESHOLD = 15;
+    private ActivityDetector silenceDetector;
+    private ActivityDetector speechDetector;
     private final Audio audio;
-    private final int numberOfSamples;
-    private final int durationInMilliSeconds;
-    private int totalLengthOfSilence;
-    private int numberOfSilences;
     private final int stepSize;
     
     public VADAnalysis(Audio audio){
         this.audio = audio;
-        this.totalLengthOfSilence = 0;
-        this.numberOfSilences = 0;
-        this.numberOfSamples = audio.getNumberOfSamples();
-        this.durationInMilliSeconds = audio.getDurationInMilliSeconds();
-        this.stepSize = 441;//(numberOfSamples / durationInMilliSeconds); // 1ms
+        this.stepSize = audio.getSampleRate() / 100; // 10ms
     }
     
-    public AnalysisResult analyse() {
-        boolean silenceStarted = false;
-        int startSilence = 0;
-        int timeInMs = 0;
+    public AnalysisResult analyse() {    
+        silenceDetector = new ActivityDetector();
+        speechDetector = new ActivityDetector();
         
-        for (int i = 0; i < numberOfSamples; i += stepSize) {
-            // create envelope
+        int timeInMs = 0;
+        for (int i = 0; i < audio.getNumberOfSamples(); i += stepSize) {
             int endSample = isLastIteration(i) ? audio.getNumberOfSamples() : i + stepSize;
             int amplitudeValue = audio.getMaxAmplitude(i, endSample);
             
-            if (isSilent(amplitudeValue) && !silenceStarted) {
-                startSilence = timeInMs;
-                silenceStarted = true;
-            }
-
-            if ((!isSilent(amplitudeValue) || isLastIteration(i)) && silenceStarted) {
-                int stopSilence = timeInMs;
-                totalLengthOfSilence += stopSilence - startSilence;
-                numberOfSilences++;
-                silenceStarted = false;
-            }
+            silenceDetector.setStartCondition(isSilent(amplitudeValue));
+            silenceDetector.setStopCondition((!isSilent(amplitudeValue) || isLastIteration(i)));
+            
+            speechDetector.setStartCondition(!isSilent(amplitudeValue));
+            speechDetector.setStopCondition((isSilent(amplitudeValue) || isLastIteration(i)));
+            
+            silenceDetector.detect(timeInMs);
+            speechDetector.detect(timeInMs);
+            
             timeInMs += 10;
         }
-        AnalysisResult result = new AnalysisResult(getSilencePercentage(), "percent", toString());
+        
+        AnalysisResult result = new AnalysisResult(silenceDetector.getMeasurementPercentage(audio.getDurationInMilliSeconds()), "percent", toString());
         return result;
     }
     
     private boolean isLastIteration(int index){
-        return ( index + stepSize ) >= numberOfSamples;
+        return ( index + stepSize ) >= audio.getNumberOfSamples();
     }
     
     private boolean isSilent(int amplitudeValue){
         return amplitudeValue < AMPLITUDE_THRESHOLD && amplitudeValue > -AMPLITUDE_THRESHOLD;
-    }
-    
-    // following getters can be used after analysis
-    
-    public float getSilencePercentage(){
-        return (totalLengthOfSilence * 100.0f) / audio.getDurationInMilliSeconds();
-    }
-    
-    public float getAverageSilenceLength(){
-        return ( totalLengthOfSilence > 0 ) ? ( totalLengthOfSilence / numberOfSilences ) : 0;
     }
     
     @Override
@@ -79,10 +61,12 @@ public class VADAnalysis {
         String result = "";
         result += "\n--- Silence statistics --- \n";
         result += "Total time in ms: \t\t" + audio.getDurationInMilliSeconds() + "\n";
-        result += "Total silence in ms: \t\t" + totalLengthOfSilence + "\n";
-        result += "Number of silences: \t\t" + numberOfSilences + "\n";
-        result += "Silence percentage: \t\t" + getSilencePercentage() + "\n";
-        result += "Average silence length: \t" + getAverageSilenceLength() + "\n";
+        result += "Total silence in ms: \t\t" + silenceDetector.getTotalMeasurementLength() + "\n";
+        result += "Number of silences: \t\t" + silenceDetector.getNumberOfMeasurements() + "\n";
+        result += "Silence percentage: \t\t" + silenceDetector.getMeasurementPercentage(audio.getDurationInMilliSeconds()) + "\n";
+        result += "Average silence length: \t" + silenceDetector.getAverageMeasurementLength() + "\n";
+        result += "Total length of speech: \t" + speechDetector.getTotalMeasurementLength() + "\n";
+        result += "Number of words: \t\t" + speechDetector.getNumberOfMeasurements() + "\n";
         return result;
     }
 }
