@@ -5,6 +5,9 @@
  */
 package analyse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Rogier
@@ -16,11 +19,13 @@ public class ActivityDetector {
     private int startValue;
     private int totalMeasurementLength;
     private int numberOfMeasurements;
+    private List<Activity> activities;
     
     public ActivityDetector(){
         this.measurementStarted = false;
         this.totalMeasurementLength = 0;
         this.numberOfMeasurements = 0;
+        this.activities = new ArrayList<>();
     }
     
     public boolean isStartCondition() {
@@ -50,6 +55,7 @@ public class ActivityDetector {
             totalMeasurementLength += xAxis - startValue;
             numberOfMeasurements++;
             measurementStarted = false;
+            activities.add(new Activity(startValue, xAxis));
         }
     }
     
@@ -67,6 +73,10 @@ public class ActivityDetector {
     
     public float getAverageMeasurementLength(){
         return ( totalMeasurementLength > 0 ) ? ( totalMeasurementLength / numberOfMeasurements ) : 0;
+    }
+    
+    public List<Activity> getActivities(){
+        return activities;
     }
     
 }

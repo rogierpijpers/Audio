@@ -18,12 +18,13 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  */
 public class AnalysisTest {
     public static void main(String[] args) throws UnsupportedAudioFileException, IOException{
-        File file = new File("resources/jennifer.wav");
+        File file = new File("resources/pdd-4-1-1.wav");
         Audio wav = new Audio(file);
         System.out.println(wav.toString());
         
         VADAnalysis analysis = new VADAnalysis(wav);
         AnalysisResult result = analysis.analyse();
+        analysis.getActivities().forEach(activity -> System.out.println(activity.toString()));
         System.out.println(result.getResultDescription());
     }
 }

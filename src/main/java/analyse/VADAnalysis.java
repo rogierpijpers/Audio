@@ -6,6 +6,8 @@
 package analyse;
 
 import audio.Audio;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -43,7 +45,6 @@ public class VADAnalysis {
             
             timeInMs += 10;
         }
-        
         AnalysisResult result = new AnalysisResult(silenceDetector.getMeasurementPercentage(audio.getDurationInMilliSeconds()), "percent", toString());
         return result;
     }
@@ -68,5 +69,17 @@ public class VADAnalysis {
         result += "Total length of speech: \t" + speechDetector.getTotalMeasurementLength() + "\n";
         result += "Number of words: \t\t" + speechDetector.getNumberOfMeasurements() + "\n";
         return result;
+    }
+    
+    public List<Activity> getActivities(){
+        List<Activity> silenceActivities = silenceDetector.getActivities();
+        List<Activity> speechActivities = speechDetector.getActivities();
+        
+        silenceActivities.forEach(activity -> activity.setHighActivity(false));
+        speechActivities.forEach(activity -> activity.setHighActivity(true));
+        
+        silenceActivities.addAll(speechActivities);
+        Collections.sort(silenceActivities, (a1, a2) -> a1.getStart() - a2.getStart());
+        return silenceActivities;
     }
 }
