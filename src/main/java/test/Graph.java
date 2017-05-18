@@ -39,7 +39,8 @@ public class Graph extends Application {
         XYChart.Series series3 = new XYChart.Series();
         
         //File file = new File("resources\\pdd-4-1-1.wav");
-        File file = new File("resources\\jennifer.wav");
+        //File file = new File("resources\\jennifer.wav");
+        File file = new File("resources/ftdl_ppa_sande_spontansprache_gegenwart_ui.wav");
         //File file = new File("D:\\Sources\\Hans audio graph\\WavReader\\sine.wav");
         //File file = new File( "C:\\Users\\Hans\\Documents\\NetBeansProjects\\WavReader\\WavReader\\sine.wav");
         Audio wav = new Audio(file);
@@ -51,8 +52,9 @@ public class Graph extends Application {
             int endSample = lastIteration ? wav.getNumberOfSamples() : i + stepSize;
             int amplitudeValue = wav.getMaxAmplitude(i, endSample);
             
-            series.getData().add(new XYChart.Data(timeValue, amplitudeValue));
+            series.getData().add(new XYChart.Data(timeValue, amplitudeValue));     
             series2.getData().add(new XYChart.Data(timeValue, wav.getAmplitude(i)));
+
             timeValue += 10;
         }     
         
@@ -60,7 +62,7 @@ public class Graph extends Application {
         AnalysisResult result = analysis.analyse();
         List<Activity> activities = analysis.getActivities();
         activities.forEach(activity -> {
-            int y = activity.isHighActivity() ? 9000 : 0;
+            int y = activity.isHighActivity() ? wav.getMaxAmplitude(0, wav.getNumberOfSamples()) : 0;
             series3.getData().add(new XYChart.Data(activity.getStart(), y));
             series3.getData().add(new XYChart.Data(activity.getStop(), y));
         });

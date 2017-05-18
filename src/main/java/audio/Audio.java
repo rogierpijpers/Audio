@@ -75,7 +75,7 @@ public class Audio {
         for(int y = startSample; y < endSample; y++){
             ampList.add(this.getAmplitude(y));
         }
-        return Collections.max(ampList);
+        return Math.abs(Collections.max(ampList));
     }
     
     private boolean isValidSampleNumber(int sampleNumber) {

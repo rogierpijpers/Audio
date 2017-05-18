@@ -54,8 +54,8 @@ public class ActivityDetector {
         if(stopCondition && measurementStarted){
             totalMeasurementLength += xAxis - startValue;
             numberOfMeasurements++;
-            measurementStarted = false;
             activities.add(new Activity(startValue, xAxis));
+            measurementStarted = false;
         }
     }
     

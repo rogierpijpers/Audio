@@ -6,15 +6,17 @@
 package analyse;
 
 import audio.Audio;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  *
  * @author Rogier
  */
 public class VADAnalysis {
-    private static final int AMPLITUDE_THRESHOLD = 15;
+    private int AMPLITUDE_THRESHOLD = 200; // 18 for Jenny;
     private ActivityDetector silenceDetector;
     private ActivityDetector speechDetector;
     private final Audio audio;
@@ -23,6 +25,9 @@ public class VADAnalysis {
     public VADAnalysis(Audio audio){
         this.audio = audio;
         this.stepSize = audio.getSampleRate() / 100; // 10ms
+        System.out.println("Stepsize: " + stepSize);
+        AMPLITUDE_THRESHOLD = calculateThreshold();
+        System.out.println(AMPLITUDE_THRESHOLD);
     }
     
     public AnalysisResult analyse() {    
@@ -35,10 +40,10 @@ public class VADAnalysis {
             int amplitudeValue = audio.getMaxAmplitude(i, endSample);
             
             silenceDetector.setStartCondition(isSilent(amplitudeValue));
-            silenceDetector.setStopCondition((!isSilent(amplitudeValue) || isLastIteration(i)));
+            silenceDetector.setStopCondition(!isSilent(amplitudeValue) || isLastIteration(i));
             
             speechDetector.setStartCondition(!isSilent(amplitudeValue));
-            speechDetector.setStopCondition((isSilent(amplitudeValue) || isLastIteration(i)));
+            speechDetector.setStopCondition(isSilent(amplitudeValue) || isLastIteration(i));
             
             silenceDetector.detect(timeInMs);
             speechDetector.detect(timeInMs);
@@ -82,4 +87,35 @@ public class VADAnalysis {
         Collections.sort(silenceActivities, (a1, a2) -> a1.getStart() - a2.getStart());
         return silenceActivities;
     }
+    
+    private int calculateThreshold(){
+        int loopSize = 0;
+        if(audio.getNumberOfSamples() > audio.getSampleRate() * 30){ // 30 seconds
+            loopSize = audio.getNumberOfSamples();
+        }else {
+            loopSize = audio.getSampleRate() * 30;
+        }
+        
+        List<Integer> amplitudeValues = new ArrayList<>();
+        for (int i = 0; i < audio.getNumberOfSamples(); i += audio.getSampleRate() / 20) { // 50ms
+            int endSample = isLastIteration(i) ? audio.getNumberOfSamples() : i + stepSize;
+            amplitudeValues.add(audio.getMaxAmplitude(i, endSample));
+        }
+        
+        int lowestAmplitudeValue = Collections.min(amplitudeValues);
+        int medianAmplitudeValue = 0;
+        
+        Collections.sort(amplitudeValues);
+        double median = 0;
+        if (amplitudeValues.size() > 0) {
+            int x = amplitudeValues.size() / 2;
+            if (amplitudeValues.size() % 2 == 0) 
+                median = (amplitudeValues.get(x - 1) + amplitudeValues.get(x)) / 2.0;
+            else median = amplitudeValues.get(x);
+        }
+        medianAmplitudeValue = (int) median;
+        
+        return (int) (medianAmplitudeValue - (0.8 * (medianAmplitudeValue - lowestAmplitudeValue)));
+    }
+
 }

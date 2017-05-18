@@ -10,6 +10,9 @@ import analyse.VADAnalysis;
 import audio.Audio;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 /**
@@ -18,7 +21,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  */
 public class AnalysisTest {
     public static void main(String[] args) throws UnsupportedAudioFileException, IOException{
-        File file = new File("resources/pdd-4-1-1.wav");
+        File file = new File("resources/jennifer.wav");
         Audio wav = new Audio(file);
         System.out.println(wav.toString());
         
@@ -26,5 +29,21 @@ public class AnalysisTest {
         AnalysisResult result = analysis.analyse();
         analysis.getActivities().forEach(activity -> System.out.println(activity.toString()));
         System.out.println(result.getResultDescription());
+        
+        System.out.println(((20 * Math.log10(wav.getMaxAmplitude(0, wav.getNumberOfSamples())))));
+        
+//        int stepSize = 441;
+//        List<Integer> amplitudes = new ArrayList<>();
+//        for (int i = 0; i < wav.getNumberOfSamples(); i += stepSize) { //(wav.getNumberOfSamples() / duration) 
+//            boolean lastIteration = ( i + stepSize ) >= wav.getNumberOfSamples();
+//            int endSample = lastIteration ? wav.getNumberOfSamples() : i + stepSize;
+//            amplitudes.add(Math.abs(wav.getMaxAmplitude(i, endSample)));
+//        }
+//        
+//        Collections.sort(amplitudes, (i1, i2) -> {
+//            return i1 - i2;
+//        });
+//        
+//        amplitudes.forEach(amp -> System.out.println(amp));
     }
 }
