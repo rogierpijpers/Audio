@@ -21,7 +21,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  */
 public class AnalysisTest {
     public static void main(String[] args) throws UnsupportedAudioFileException, IOException{
-        File file = new File("resources/jennifer.wav");
+        File file = new File("resources/ftdl_ppa_sande_spontansprache_gegenwart_ui.wav");
         Audio wav = new Audio(file);
         System.out.println(wav.toString());
         

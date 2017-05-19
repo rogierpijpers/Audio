@@ -25,9 +25,7 @@ public class VADAnalysis {
     public VADAnalysis(Audio audio){
         this.audio = audio;
         this.stepSize = audio.getSampleRate() / 100; // 10ms
-        System.out.println("Stepsize: " + stepSize);
         AMPLITUDE_THRESHOLD = calculateThreshold();
-        System.out.println(AMPLITUDE_THRESHOLD);
     }
     
     public AnalysisResult analyse() {    
@@ -59,7 +57,7 @@ public class VADAnalysis {
     }
     
     private boolean isSilent(int amplitudeValue){
-        return amplitudeValue < AMPLITUDE_THRESHOLD && amplitudeValue > -AMPLITUDE_THRESHOLD;
+        return amplitudeValue < AMPLITUDE_THRESHOLD & amplitudeValue > -AMPLITUDE_THRESHOLD;
     }
     
     @Override
@@ -90,32 +88,34 @@ public class VADAnalysis {
     
     private int calculateThreshold(){
         int loopSize = 0;
-        if(audio.getNumberOfSamples() > audio.getSampleRate() * 30){ // 30 seconds
+        if(audio.getNumberOfSamples() < audio.getSampleRate() * 30){ // 30 seconds
             loopSize = audio.getNumberOfSamples();
         }else {
             loopSize = audio.getSampleRate() * 30;
         }
-        
+
         List<Integer> amplitudeValues = new ArrayList<>();
-        for (int i = 0; i < audio.getNumberOfSamples(); i += audio.getSampleRate() / 20) { // 50ms
+        for (int i = 0; i < loopSize; i += audio.getSampleRate() / 20) { // 50ms
             int endSample = isLastIteration(i) ? audio.getNumberOfSamples() : i + stepSize;
             amplitudeValues.add(audio.getMaxAmplitude(i, endSample));
         }
         
         int lowestAmplitudeValue = Collections.min(amplitudeValues);
-        int medianAmplitudeValue = 0;
-        
-        Collections.sort(amplitudeValues);
-        double median = 0;
-        if (amplitudeValues.size() > 0) {
-            int x = amplitudeValues.size() / 2;
-            if (amplitudeValues.size() % 2 == 0) 
-                median = (amplitudeValues.get(x - 1) + amplitudeValues.get(x)) / 2.0;
-            else median = amplitudeValues.get(x);
-        }
-        medianAmplitudeValue = (int) median;
+        int medianAmplitudeValue = getMedianAmplitude(amplitudeValues);
         
         return (int) (medianAmplitudeValue - (0.8 * (medianAmplitudeValue - lowestAmplitudeValue)));
+    }
+
+    private int getMedianAmplitude(List<Integer> amplitudeValues) {
+        Collections.sort(amplitudeValues);
+        double median = 0;
+        int ampsMiddle = amplitudeValues.size() / 2;
+        if (amplitudeValues.size() % 2 == 0){
+            median = (amplitudeValues.get(ampsMiddle - 1) + amplitudeValues.get(ampsMiddle)) / 2.0;
+        }else {
+            median = amplitudeValues.get(ampsMiddle);
+        }
+        return (int) median;
     }
 
 }
