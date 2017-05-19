@@ -48,8 +48,8 @@ public class VADAnalysis {
 
             timeInMs += 10;
         }
-        AnalysisResult result = new AnalysisResult(silenceDetector.getMeasurementPercentage(audio.getDurationInMilliSeconds()), "percent", toString());
-        return result;
+        
+        return new AnalysisResult(silenceDetector.getMeasurementPercentage(audio.getDurationInMilliSeconds()), "percent", toString());
     }
 
     private boolean isLastIteration(int index) {
