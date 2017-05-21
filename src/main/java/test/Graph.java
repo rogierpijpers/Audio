@@ -1,25 +1,21 @@
 
 package test;
 
-import analyse.Activity;
 import analyse.AnalysisResult;
 import analyse.FrequencyWrapper;
 import analyse.VADAnalysis;
-import analyse.VADAnalysisImpl;
 import audio.Audio;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -53,8 +49,12 @@ public class Graph extends Application {
         XYChart.Series series2 = new XYChart.Series();
         XYChart.Series series3 = new XYChart.Series();
         XYChart.Series series4 = new XYChart.Series();
-
-        File file = getTestFile(1);
+        
+        final CategoryAxis barX = new CategoryAxis();
+        final NumberAxis barY = new NumberAxis();
+        BarChart<String, Number> barChart = new BarChart<>(barX, barY);
+        
+        File file = getTestFile(3);
         
         Audio wav = new Audio(file);
         
@@ -67,10 +67,10 @@ public class Graph extends Application {
         int stepSize = wav.getSampleRate() / 100;
         int amplitudePeak = wav.getMaxAmplitude(0, wav.getNumberOfSamples());
         
-        int frequencyWindowSize = 1024;
+        int frequencyWindowSize = 512;
         FrequencyWrapper frequencyWrapper = new FrequencyWrapper(frequencyWindowSize);
         
-        for (int i = 0; i < wav.getNumberOfSamples(); i += stepSize) { //(wav.getNumberOfSamples() / duration) 
+        for (int i = 0; i < wav.getNumberOfSamples(); i += stepSize / 2) { //(wav.getNumberOfSamples() / duration) 
             boolean lastIteration = ( i + stepSize ) >= wav.getNumberOfSamples();
             int endSample = lastIteration ? wav.getNumberOfSamples() : i + stepSize;
             int amplitudeValue = wav.getMaxAmplitude(i, endSample);
@@ -84,10 +84,7 @@ public class Graph extends Application {
 //            if(i + frequencyWindowSize < wav.getNumberOfSamples()){
 //                int[] amps = wav.getAmplitudeWindow(i, frequencyWindowSize);
 //                double dominantFrequency = frequencyWrapper.getDominantFrequency(frequencyWrapper.toDoubleArray(amps), wav.getSampleRate());
-//                System.out.println(dominantFrequency);
-//                if(!activity[silenceIndex])
-//                    dominantFrequency = 0;
-//                series4.getData().add(new XYChart.Data(timeValue, -dominantFrequency));
+//                series4.getData().add(new XYChart.Data(Integer.toString(timeValue), dominantFrequency));
 //            }
  
             timeValue += 10;
@@ -102,12 +99,12 @@ public class Graph extends Application {
         series2.setName("Amplitude");
         lineChart.getData().add(series3);
         series3.setName("Voice Activity");
-        lineChart.getData().add(series4);
+        barChart.getData().add(series4);
         series4.setName("Dominant Frequency");
         
-        root.getChildren().add(lineChart);
-
-        Scene scene = new Scene(root, 300, 250);
+        root.getChildren().addAll(lineChart);
+        
+        Scene scene = new Scene(root, 800, 600);
 
         primaryStage.setTitle(file.getName());
         primaryStage.setScene(scene);

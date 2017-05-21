@@ -24,16 +24,15 @@ public class VADAnalysis {
         this.audio = audio;
         this.windowSize = audio.getSampleRate() / 100; // 10ms
         AMPLITUDE_THRESHOLD = calculateThreshold();
-        this.activity = new boolean[(audio.getNumberOfSamples() / windowSize) + 1];
+        this.activity = new boolean[(audio.getNumberOfSamples() / (windowSize / 2)) + 1];
     }
     
     public AnalysisResult analyse() {    
-        
         int silenceIndex = 0;
-        for (int i = 0; i < audio.getNumberOfSamples(); i += windowSize) {
-            int lastSampleInWindow = isLastIteration(i) ? audio.getNumberOfSamples() : i + windowSize;
-            int envelopeAmplitude = audio.getMaxAmplitude(i, lastSampleInWindow);
-
+        for (int i = 0; i < audio.getNumberOfSamples(); i += (windowSize / 2)) {
+            int lastWindowSample = isLastIteration(i) ? audio.getNumberOfSamples() : i + windowSize;
+            int envelopeAmplitude = audio.getMaxAmplitude(i, lastWindowSample);
+            
             activity[silenceIndex] = !isSilent(envelopeAmplitude);
             
             silenceIndex++;
@@ -105,11 +104,11 @@ public class VADAnalysis {
     }
     
     private double getTotalLengthOfSilence(){
-        return getNumberOfBoolValues(activity, false) * (audio.getSampleRate() / windowSize * 0.1);
+        return getNumberOfBoolValues(activity, false) * (audio.getSampleRate() / (windowSize * 2) * 0.1);
     }
     
     private double getTotalLengthOfSpeech(){
-        return getNumberOfBoolValues(activity, true) * (audio.getSampleRate() / windowSize * 0.1);
+        return getNumberOfBoolValues(activity, true) * (audio.getSampleRate() / (windowSize * 2) * 0.1);
     }
     
     private int getTotalNumberOfSilences(){
