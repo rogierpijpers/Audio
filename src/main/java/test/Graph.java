@@ -5,6 +5,7 @@ import analyse.AnalysisResult;
 import analyse.FrequencyWrapper;
 import analyse.VADAnalysis;
 import audio.Audio;
+import chart.VADAnalysisChart;
 import java.io.File;
 import java.io.IOException;
 
@@ -39,7 +40,7 @@ public class Graph extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException, UnsupportedAudioFileException {
 
-        StackPane root = new StackPane();
+        FlowPane root = new FlowPane();
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
 
@@ -54,7 +55,7 @@ public class Graph extends Application {
         final NumberAxis barY = new NumberAxis();
         BarChart<String, Number> barChart = new BarChart<>(barX, barY);
         
-        File file = getTestFile(3);
+        File file = getTestFile(1);
         
         Audio wav = new Audio(file);
         
@@ -70,6 +71,12 @@ public class Graph extends Application {
         int frequencyWindowSize = 512;
         FrequencyWrapper frequencyWrapper = new FrequencyWrapper(frequencyWindowSize);
         
+        VADAnalysisChart chart = new VADAnalysisChart(  );
+        int[] amplitudeData = new int[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
+        int[] envelopeData = new int[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
+        int[] activityData = new int[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
+        double[] dominantFrequencyData = new double[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
+        
         for (int i = 0; i < wav.getNumberOfSamples(); i += stepSize / 2) { //(wav.getNumberOfSamples() / duration) 
             boolean lastIteration = ( i + stepSize ) >= wav.getNumberOfSamples();
             int endSample = lastIteration ? wav.getNumberOfSamples() : i + stepSize;
@@ -81,15 +88,27 @@ public class Graph extends Application {
             int yValue = activity[silenceIndex] ? amplitudePeak : 0;
             series3.getData().add(new XYChart.Data(timeValue, yValue));
             
-//            if(i + frequencyWindowSize < wav.getNumberOfSamples()){
-//                int[] amps = wav.getAmplitudeWindow(i, frequencyWindowSize);
-//                double dominantFrequency = frequencyWrapper.getDominantFrequency(frequencyWrapper.toDoubleArray(amps), wav.getSampleRate());
-//                series4.getData().add(new XYChart.Data(Integer.toString(timeValue), dominantFrequency));
-//            }
- 
+            if(i + frequencyWindowSize < wav.getNumberOfSamples()){
+                int[] amps = wav.getAmplitudeWindow(i, frequencyWindowSize);
+                double dominantFrequency = frequencyWrapper.getDominantFrequency(frequencyWrapper.toDoubleArray(amps), wav.getSampleRate());
+                dominantFrequencyData[silenceIndex] = dominantFrequency;
+                series4.getData().add(new XYChart.Data(Integer.toString(timeValue), dominantFrequency));
+            }
+            
+            amplitudeData[silenceIndex] = wav.getAmplitude(i);
+            envelopeData[silenceIndex] = amplitudeValue;
+            activityData[silenceIndex] = yValue;
+            
             timeValue += 10;
             silenceIndex++;
         }     
+        
+        chart.setAmplitudeData(amplitudeData);
+        chart.setEnvelopeData(envelopeData);
+        chart.setActivityData(activityData);
+        chart.setDominantFrequencyData(dominantFrequencyData);
+        
+        chart.chartToPNG();
         
         System.out.println(result.getResultDescription());
         
@@ -102,9 +121,9 @@ public class Graph extends Application {
         barChart.getData().add(series4);
         series4.setName("Dominant Frequency");
         
-        root.getChildren().addAll(lineChart);
+        root.getChildren().addAll(lineChart, barChart);
         
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 600, 800);
 
         primaryStage.setTitle(file.getName());
         primaryStage.setScene(scene);
