@@ -21,13 +21,13 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  */
 public class AnalysisTest {
     public static void main(String[] args) throws UnsupportedAudioFileException, IOException{
-        File file = new File("resources/ftdl_ppa_sande_spontansprache_gegenwart_ui.wav");
+        File file = new File("resources/jennifer.wav");
         Audio wav = new Audio(file);
         System.out.println(wav.toString());
         
         VADAnalysis analysis = new VADAnalysis(wav);
         AnalysisResult result = analysis.analyse();
-        analysis.getActivities().forEach(activity -> System.out.println(activity.toString()));
+        //analysis.getActivities().forEach(activity -> System.out.println(activity.toString()));
         System.out.println(result.getResultDescription());
         
         System.out.println(((20 * Math.log10(wav.getMaxAmplitude(0, wav.getNumberOfSamples())))));

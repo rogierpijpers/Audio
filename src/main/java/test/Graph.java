@@ -3,14 +3,20 @@ package test;
 
 import analyse.Activity;
 import analyse.AnalysisResult;
+import analyse.FrequencyWrapper;
 import analyse.VADAnalysis;
+import analyse.VADAnalysisImpl;
 import audio.Audio;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -24,7 +30,16 @@ import javax.sound.sampled.UnsupportedAudioFileException;
  * @author Hans & Rogier
  */
 public class Graph extends Application {
-
+    
+    private File getTestFile(int index){
+        switch(index){
+            case 1: return new File("resources\\pdd-4-1-1.wav");
+            case 2: return new File("resources\\jennifer.wav");
+            case 3: return new File("resources/ftdl_ppa_sande_spontansprache_gegenwart_ui.wav");
+            default: return null;
+        }
+    }
+    
     @Override
     public void start(Stage primaryStage) throws IOException, UnsupportedAudioFileException {
 
@@ -37,16 +52,24 @@ public class Graph extends Application {
         XYChart.Series series = new XYChart.Series();
         XYChart.Series series2 = new XYChart.Series();
         XYChart.Series series3 = new XYChart.Series();
+        XYChart.Series series4 = new XYChart.Series();
+
+        File file = getTestFile(1);
         
-        //File file = new File("resources\\pdd-4-1-1.wav");
-        //File file = new File("resources\\jennifer.wav");
-        File file = new File("resources/ftdl_ppa_sande_spontansprache_gegenwart_ui.wav");
-        //File file = new File("D:\\Sources\\Hans audio graph\\WavReader\\sine.wav");
-        //File file = new File( "C:\\Users\\Hans\\Documents\\NetBeansProjects\\WavReader\\WavReader\\sine.wav");
         Audio wav = new Audio(file);
         
+        VADAnalysis analysis = new VADAnalysis(wav);
+        AnalysisResult result = analysis.analyse();
+        boolean[] activity = analysis.getActivity();
+        
         int timeValue = 0;
-        int stepSize = 441;
+        int silenceIndex = 0;
+        int stepSize = wav.getSampleRate() / 100;
+        int amplitudePeak = wav.getMaxAmplitude(0, wav.getNumberOfSamples());
+        
+        int frequencyWindowSize = 1024;
+        FrequencyWrapper frequencyWrapper = new FrequencyWrapper(frequencyWindowSize);
+        
         for (int i = 0; i < wav.getNumberOfSamples(); i += stepSize) { //(wav.getNumberOfSamples() / duration) 
             boolean lastIteration = ( i + stepSize ) >= wav.getNumberOfSamples();
             int endSample = lastIteration ? wav.getNumberOfSamples() : i + stepSize;
@@ -54,18 +77,23 @@ public class Graph extends Application {
             
             series.getData().add(new XYChart.Data(timeValue, amplitudeValue));     
             series2.getData().add(new XYChart.Data(timeValue, wav.getAmplitude(i)));
-
+            
+            int yValue = activity[silenceIndex] ? amplitudePeak : 0;
+            series3.getData().add(new XYChart.Data(timeValue, yValue));
+            
+//            if(i + frequencyWindowSize < wav.getNumberOfSamples()){
+//                int[] amps = wav.getAmplitudeWindow(i, frequencyWindowSize);
+//                double dominantFrequency = frequencyWrapper.getDominantFrequency(frequencyWrapper.toDoubleArray(amps), wav.getSampleRate());
+//                System.out.println(dominantFrequency);
+//                if(!activity[silenceIndex])
+//                    dominantFrequency = 0;
+//                series4.getData().add(new XYChart.Data(timeValue, -dominantFrequency));
+//            }
+ 
             timeValue += 10;
+            silenceIndex++;
         }     
         
-        VADAnalysis analysis = new VADAnalysis(wav);
-        AnalysisResult result = analysis.analyse();
-        List<Activity> activities = analysis.getActivities();
-        activities.forEach(activity -> {
-            int y = activity.isHighActivity() ? wav.getMaxAmplitude(0, wav.getNumberOfSamples()) : 0;
-            series3.getData().add(new XYChart.Data(activity.getStart(), y));
-            series3.getData().add(new XYChart.Data(activity.getStop(), y));
-        });
         System.out.println(result.getResultDescription());
         
         lineChart.getData().add(series);
@@ -74,13 +102,14 @@ public class Graph extends Application {
         series2.setName("Amplitude");
         lineChart.getData().add(series3);
         series3.setName("Voice Activity");
-       
-        root.getChildren().add(lineChart);
+        lineChart.getData().add(series4);
+        series4.setName("Dominant Frequency");
         
+        root.getChildren().add(lineChart);
 
         Scene scene = new Scene(root, 300, 250);
 
-        primaryStage.setTitle("WavPlot");
+        primaryStage.setTitle(file.getName());
         primaryStage.setScene(scene);
 
         primaryStage.show();

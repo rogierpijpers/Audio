@@ -70,6 +70,14 @@ public class Audio {
         return MSB << 8 | (255 & LSB);
     }
     
+    public int[] getAmplitudeWindow(int startSample, int windowSize){
+        int[] result = new int[windowSize];
+        for(int i = 0; i < windowSize; i++){
+            result[i] = getAmplitude(startSample + i);
+        }
+        return result;
+    }
+    
     public int getMaxAmplitude(int startSample, int endSample){
         List<Integer> ampList = new ArrayList<>();
         for(int y = startSample; y < endSample; y++){

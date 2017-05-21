@@ -12,6 +12,7 @@ import java.util.List;
  *
  * @author Rogier
  */
+@Deprecated
 public class ActivityDetector {
     private boolean startCondition;
     private boolean stopCondition;

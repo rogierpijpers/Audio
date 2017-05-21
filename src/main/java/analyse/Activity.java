@@ -9,6 +9,7 @@ package analyse;
  *
  * @author Rogier
  */
+@Deprecated
 public class Activity {
     private int start;
     private int stop;
