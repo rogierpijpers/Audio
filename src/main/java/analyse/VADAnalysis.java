@@ -52,7 +52,7 @@ public class VADAnalysis {
     @Override
     public String toString() {
         String result = "";
-        result += "\n--- Silence statistics --- \n";
+        result += "\n--- Voice Activity Detection results --- \n";
         result += "Total time in ms: \t\t" + audio.getDurationInMilliSeconds() + "\n";
         result += "Total silence in ms: \t\t" + getTotalLengthOfSilence() + "\n";
         result += "Number of silences: \t\t" + getTotalNumberOfSilences() + "\n";
@@ -60,6 +60,8 @@ public class VADAnalysis {
         result += "Average silence length: \t" + getAverageSilenceLength() + "\n";
         result += "Total length of speech: \t" + getTotalLengthOfSpeech() + "\n";
         result += "Number of words: \t\t" + getTotalNumberOfWords() + "\n";
+        result += "Silences longer than 50 ms: \t" + getSilencesLongerThanMilliSeconds(50) + "\n";
+        result += "Silences longer than 1000 ms: \t" + getSilencesLongerThanMilliSeconds(1000) + "\n";
         return result;
     }
     
@@ -142,6 +144,30 @@ public class VADAnalysis {
             if((values[i] != expected && start) || (values[i] == expected && i == values.length - 1)){
                 numberOfValues++;
                 start = !start;
+            }
+        }
+        return numberOfValues;
+    }
+    
+    
+    // POSSIBLE BUG!! silences from > 1000 ms are (probably) also counted as > 50ms
+    private int getSilencesLongerThanMilliSeconds(int numberOfMs){
+        int numberOfValues = 0;
+        boolean start = false;
+        int tmpMeasuredValues = 0;
+        for(int i = 0; i < activity.length; i++){
+            if(!activity[i])
+                start = true;
+            
+            if(start)
+                tmpMeasuredValues++;
+            
+            if((activity[i] && start) || (!activity[i] && i == activity.length - 1)){
+                start = !start;
+                if(tmpMeasuredValues > numberOfMs * 2){
+                    numberOfValues++;
+                    tmpMeasuredValues = 0;
+                }
             }
         }
         return numberOfValues;
