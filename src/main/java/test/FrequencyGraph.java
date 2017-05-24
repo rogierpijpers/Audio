@@ -57,11 +57,11 @@ public class FrequencyGraph extends Application {
 
 
         int timeDomain = 441;//(int) (88200 + 110.3) ; // 2 seconds and something
-        FrequencyWrapper frequencyWrapper = new FrequencyWrapper();
+        FrequencyWrapper frequencyWrapper = new FrequencyWrapper(wav.getSampleRate());
         double[] doubleData = new double[frequencyWrapper.getWindowSize()];
         
         int[] amplitudes = wav.getAmplitudeWindow(timeDomain, frequencyWrapper.getWindowSize());
-        Map<Double, Double> frequencySpectrum = frequencyWrapper.getFrequencySpectrum(frequencyWrapper.toDoubleArray(amplitudes), wav.getSampleRate()); 
+        Map<Double, Double> frequencySpectrum = frequencyWrapper.getFrequencySpectrum(amplitudes); 
         
         frequencySpectrum.entrySet().forEach((entry) -> {
             series.getData().add(new XYChart.Data(Double.toString(entry.getKey()), entry.getValue()));

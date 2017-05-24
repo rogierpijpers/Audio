@@ -21,14 +21,22 @@ import org.apache.commons.math3.transform.TransformType;
  */
 public class FrequencyWrapper {
     private int WINDOW_SIZE = 1024;
+    private int sampleRate;
     
-    public FrequencyWrapper(int windowSize){
+    public FrequencyWrapper(int sampleRate, int windowSize){
+        this.sampleRate = sampleRate;
         this.WINDOW_SIZE = windowSize;
     }
     
-    public FrequencyWrapper(){}
+    public FrequencyWrapper(int sampleRate){
+        this.sampleRate = sampleRate;
+    }
     
-    public Map<Double, Double> getFrequencySpectrum(double[] input, int sampleRate){
+    public Map<Double, Double> getFrequencySpectrum(int[] input){
+        return getFrequencySpectrum(toDoubleArray(input));
+    }
+    
+    public Map<Double, Double> getFrequencySpectrum(double[] input){
         FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
         Complex[] cmplx = transformer.transform(input, TransformType.FORWARD);
 
@@ -47,8 +55,12 @@ public class FrequencyWrapper {
         return frequencySpectrum;
     }
     
-    public double getDominantFrequency(double[] input, int sampleRate){
-        Map<Double, Double> spectrum = getFrequencySpectrum(input, sampleRate);
+    public double getDominantFrequency(int[] input){
+        return getDominantFrequency(toDoubleArray(input));
+    }
+    
+    public double getDominantFrequency(double[] input){
+        Map<Double, Double> spectrum = getFrequencySpectrum(input);
         
         Map.Entry<Double, Double> maxEntry = null;
         for(Map.Entry<Double, Double> entry : spectrum.entrySet()){
@@ -62,7 +74,7 @@ public class FrequencyWrapper {
         return WINDOW_SIZE;
     }
     
-    public double[] toDoubleArray(int[] amplitudes){
+    private double[] toDoubleArray(int[] amplitudes){
         double[] result = new double[amplitudes.length];
         for(int i = 0; i < amplitudes.length; i++){
             result[i] = amplitudes[i];

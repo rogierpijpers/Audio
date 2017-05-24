@@ -69,7 +69,7 @@ public class Graph extends Application {
         int amplitudePeak = wav.getMaxAmplitude(0, wav.getNumberOfSamples());
         
         int frequencyWindowSize = 512;
-        FrequencyWrapper frequencyWrapper = new FrequencyWrapper(frequencyWindowSize);
+        FrequencyWrapper frequencyWrapper = new FrequencyWrapper(wav.getSampleRate(), frequencyWindowSize);
         
         VADAnalysisChart chart = new VADAnalysisChart(  );
         int[] amplitudeData = new int[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
@@ -90,7 +90,7 @@ public class Graph extends Application {
             
             if(i + frequencyWindowSize < wav.getNumberOfSamples()){
                 int[] amps = wav.getAmplitudeWindow(i, frequencyWindowSize);
-                double dominantFrequency = frequencyWrapper.getDominantFrequency(frequencyWrapper.toDoubleArray(amps), wav.getSampleRate());
+                double dominantFrequency = frequencyWrapper.getDominantFrequency(amps);
                 dominantFrequencyData[silenceIndex] = dominantFrequency;
                 series4.getData().add(new XYChart.Data(Integer.toString(timeValue), dominantFrequency));
             }
