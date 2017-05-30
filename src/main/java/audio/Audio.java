@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Audio {
+    private String fileName;
     private int sampleRate;
     private int bitRate;
     private int sampleSize;
@@ -35,11 +36,17 @@ public class Audio {
             int dataLength = (int) audioInputStream.getFrameLength() * audioFormat.getSampleSizeInBits() * numberOfChannels / 8;
             data = new byte[dataLength];
             audioInputStream.read(data);
+            
+            this.fileName = wavFile.getName();
         }
 
         if(!isRightFormat(audioFormat)){
             //throw new UnsupportedAudioFileException();
         }
+    }
+    
+    public String getFileName(){
+        return fileName;
     }
 
     private boolean isRightFormat(AudioFormat audioFormat){

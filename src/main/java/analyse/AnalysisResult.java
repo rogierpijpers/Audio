@@ -5,33 +5,36 @@
  */
 package analyse;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author Rogier
  */
 public class AnalysisResult {
-    private double value;
-    private String unit;
-    private String resultDescription;
+    private Map<String, Double> properties;
+    private final String resultDescription;
 
-    public AnalysisResult(double value, String unit, String resultDescription) {
-        this.value = value;
-        this.unit = unit;
+    public AnalysisResult(String resultDescription) {
+        this.properties = new HashMap<>();
         this.resultDescription = resultDescription;
     }
     
-    public double getValue() {
-        return value;
+    public void addProperty(String name, double value){
+        properties.put(name, value);
     }
-
-    public String getUnit() {
-        return unit;
+    
+    public void setProperties(Map<String, Double> properties){
+        this.properties = properties;
+    }
+    
+    public Map<String, Double> getProperties(){
+        return properties;
     }
 
     public String getResultDescription() {
         return resultDescription;
     }
 
-    
-    
 }

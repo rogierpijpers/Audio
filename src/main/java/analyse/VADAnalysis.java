@@ -6,170 +6,114 @@
 package analyse;
 
 import audio.Audio;
+import chart.ChartDataSet;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import util.ArrayUtilities;
 
 /**
  *
  * @author Rogier
  */
-public class VADAnalysis {
-    private final int AMPLITUDE_THRESHOLD;
-    private final Audio audio;
+public class VADAnalysis extends Analysis {
+    private final static int LOW_PASS_FILTER = 440;
+    private final static int HIGH_PASS_FILTER = 800;
+    
+    private final Threshold threshold;
     private final int windowSize;
     private final boolean[] activity;
     
+    private VADAnalysisProperties vadProperties;
+    
     public VADAnalysis(Audio audio){
-        this.audio = audio;
+        super(audio);
         this.windowSize = audio.getSampleRate() / 100; // 10ms
-        AMPLITUDE_THRESHOLD = calculateThreshold();
         this.activity = new boolean[(audio.getNumberOfSamples() / (windowSize / 2)) + 1];
-    }
-    
-    public AnalysisResult analyse() {    
-        int silenceIndex = 0;
-        for (int i = 0; i < audio.getNumberOfSamples(); i += (windowSize / 2)) {
-            int lastWindowSample = isLastIteration(i) ? audio.getNumberOfSamples() : i + windowSize;
-            int envelopeAmplitude = audio.getMaxAmplitude(i, lastWindowSample);
-            
-            activity[silenceIndex] = !isSilent(envelopeAmplitude);
-            
-            silenceIndex++;
-        }
-        AnalysisResult result = new AnalysisResult(getSilencePercentage(), "percent", toString());
-        return result;
-    }
-    
-    private boolean isLastIteration(int index){
-        return ( index + windowSize ) >= audio.getNumberOfSamples();
-    }
-    
-    private boolean isSilent(int amplitudeValue){
-        return amplitudeValue < AMPLITUDE_THRESHOLD & amplitudeValue > -AMPLITUDE_THRESHOLD;
+        
+        threshold = new Threshold(audio, windowSize, LOW_PASS_FILTER, HIGH_PASS_FILTER);
     }
     
     @Override
-    public String toString() {
-        String result = "";
-        result += "\n--- Voice Activity Detection results --- \n";
-        result += "Total time in ms: \t\t" + audio.getDurationInMilliSeconds() + "\n";
-        result += "Total silence in ms: \t\t" + getTotalLengthOfSilence() + "\n";
-        result += "Number of silences: \t\t" + getTotalNumberOfSilences() + "\n";
-        result += "Silence percentage: \t\t" + getSilencePercentage() + "\n";
-        result += "Average silence length: \t" + getAverageSilenceLength() + "\n";
-        result += "Total length of speech: \t" + getTotalLengthOfSpeech() + "\n";
-        result += "Number of words: \t\t" + getTotalNumberOfWords() + "\n";
-        result += "Silences longer than 50 ms: \t" + getSilencesLongerThanMilliSeconds(50) + "\n";
-        result += "Silences longer than 1000 ms: \t" + getSilencesLongerThanMilliSeconds(1000) + "\n";
+    public AnalysisResult analyse() {    
+        int silenceIndex = 0;
+        FrequencySpectrum frequencySpectrum;
+        
+        for (int i = 0; i < audio.getNumberOfSamples(); i += (windowSize / 2)) {
+            int freqWindowSize = (( i + windowSize ) >= audio.getNumberOfSamples()) ? audio.getNumberOfSamples() - i : windowSize;
+            
+            frequencySpectrum = new FrequencySpectrum(audio.getSampleRate(), freqWindowSize);   
+            int[] freqWindow = audio.getAmplitudeWindow(i, frequencySpectrum.getWindowSize());
+              
+            Map<Double, Double> spectrum = frequencySpectrum.getSpectrum(freqWindow, LOW_PASS_FILTER, HIGH_PASS_FILTER);
+            
+            List<Double> magnitudeValues = new ArrayList<>();
+            
+            spectrum.entrySet().forEach((entry) -> {
+                magnitudeValues.add(entry.getValue());
+            });
+            
+            activity[silenceIndex] = !magnitudeValues.isEmpty() ? isSilent(magnitudeValues) : false;
+            silenceIndex++;
+        }
+        
+        AnalysisResult result = new AnalysisResult(getDescription());
+        vadProperties = new VADAnalysisProperties(activity, audio, windowSize); 
+        result.setProperties(vadProperties.toMap());
+        
         return result;
     }
     
-    private int calculateThreshold(){
-        int loopSize = 0;
-        if(audio.getNumberOfSamples() < audio.getSampleRate() * 30){ // 30 seconds
-            loopSize = audio.getNumberOfSamples();
-        }else {
-            loopSize = audio.getSampleRate() * 30;
-        }
-
-        List<Integer> amplitudeValues = new ArrayList<>();
-        for (int i = 0; i < loopSize; i += audio.getSampleRate() / 20) { // 50ms
-            int endSample = isLastIteration(i) ? audio.getNumberOfSamples() : i + windowSize;
-            amplitudeValues.add(audio.getMaxAmplitude(i, endSample));
-        }
-        
-        int lowestAmplitudeValue = Collections.min(amplitudeValues);
-        int medianAmplitudeValue = getMedianAmplitude(amplitudeValues);
-        
-        return (int) (medianAmplitudeValue - (0.8 * (medianAmplitudeValue - lowestAmplitudeValue)));
-    }
-
-    private int getMedianAmplitude(List<Integer> amplitudeValues) {
-        Collections.sort(amplitudeValues);
-        double median = 0;
-        int ampsMiddle = amplitudeValues.size() / 2;
-        if (amplitudeValues.size() % 2 == 0){
-            median = (amplitudeValues.get(ampsMiddle - 1) + amplitudeValues.get(ampsMiddle)) / 2.0;
-        }else {
-            median = amplitudeValues.get(ampsMiddle);
-        }
-        return (int) median;
+    private boolean isSilent(List<Double> magnitudeValues){
+        return ArrayUtilities.getAverage(magnitudeValues) > threshold.getValue();
     }
     
     public boolean[] getActivity(){
         return activity;
     }
     
-    private double getSilencePercentage(){
-        return (getTotalLengthOfSilence() * 100.0f) / audio.getDurationInMilliSeconds();
+    @Override
+    public String getDescription(){
+        String result = "";
+        result += "VAD analysis looks for activity in a wav file, larger than calculated threshold.\n";
+        result += "Activity is measured for voice frequencies only, currently set at:\n";
+        result += "\t-low pass filter: " + LOW_PASS_FILTER + "\n";
+        result += "\t-high pass filter: " + HIGH_PASS_FILTER;
+        return result;
     }
     
-    private double getTotalLengthOfSilence(){
-        return getNumberOfBoolValues(activity, false) * (audio.getSampleRate() / (windowSize * 2) * 0.1);
-    }
-    
-    private double getTotalLengthOfSpeech(){
-        return getNumberOfBoolValues(activity, true) * (audio.getSampleRate() / (windowSize * 2) * 0.1);
-    }
-    
-    private int getTotalNumberOfSilences(){
-        return getFollowingNumberOfBoolValues(activity, false);
-    }
-    
-    private int getTotalNumberOfWords(){
-        return getFollowingNumberOfBoolValues(activity, true);
-    }
-    
-    private double getAverageSilenceLength(){
-        return ( getTotalLengthOfSilence() > 0 ) ? ( getTotalLengthOfSilence() / getTotalNumberOfSilences() ) : 0;
-    }
-    
-    private int getNumberOfBoolValues(boolean[] values, boolean expected){
-        int numberOfValues = 0;
-        for(int i = 0; i < values.length; i++){
-            if(values[i] == expected)
-                numberOfValues++;
-        }
-        return numberOfValues;
-    }
-    
-    private int getFollowingNumberOfBoolValues(boolean[] values, boolean expected){
-        int numberOfValues = 0;
-        boolean start = false;
-        for(int i = 0; i < values.length; i++){
-            if(values[i] == expected)
-                start = true;
+    @Override
+    public ChartDataSet getChartDataSet(){
+        int stepSize = audio.getSampleRate() / 100;
+        int loopIndex = 0;
+        
+        double[] amplitudeData = new double[(audio.getNumberOfSamples() / ((audio.getSampleRate() / 100) / 2)) + 1];
+        double[] envelopeData = new double[(audio.getNumberOfSamples() / ((audio.getSampleRate() / 100) / 2)) + 1];
+        double[] activityData = new double[(audio.getNumberOfSamples() / ((audio.getSampleRate() / 100) / 2)) + 1]; 
+        
+        int maxAmplitude = audio.getMaxAmplitude(0, audio.getNumberOfSamples());
+
+        for (int i = 0; i < audio.getNumberOfSamples(); i += stepSize / 2) {
+            boolean lastIteration = ( i + stepSize ) >= audio.getNumberOfSamples();
+            int endSample = lastIteration ? audio.getNumberOfSamples() : i + stepSize;
+            int amplitudeValue = audio.getMaxAmplitude(i, endSample);
             
-            if((values[i] != expected && start) || (values[i] == expected && i == values.length - 1)){
-                numberOfValues++;
-                start = !start;
-            }
+            amplitudeData[loopIndex] = audio.getAmplitude(i);
+            envelopeData[loopIndex] = amplitudeValue;
+            activityData[loopIndex] = activity[loopIndex] ? maxAmplitude : 0;
+            loopIndex++;
         }
-        return numberOfValues;
-    }
-    
-    
-    // POSSIBLE BUG!! silences from > 1000 ms are (probably) also counted as > 50ms
-    private int getSilencesLongerThanMilliSeconds(int numberOfMs){
-        int numberOfValues = 0;
-        boolean start = false;
-        int tmpMeasuredValues = 0;
-        for(int i = 0; i < activity.length; i++){
-            if(!activity[i])
-                start = true;
-            
-            if(start)
-                tmpMeasuredValues++;
-            
-            if((activity[i] && start) || (!activity[i] && i == activity.length - 1)){
-                start = !start;
-                if(tmpMeasuredValues > numberOfMs * 2){
-                    numberOfValues++;
-                    tmpMeasuredValues = 0;
-                }
-            }
-        }
-        return numberOfValues;
+        
+        String chartName = "VAD_analysis_" + audio.getFileName();
+        
+        ChartDataSet dataSet = new ChartDataSet(chartName, "Time", "Amplitude");
+        dataSet.addData("amplitude", amplitudeData);
+        dataSet.addData("envelope", envelopeData);
+        dataSet.addData("activity", activityData);
+        
+        dataSet.setXAxisScale(5);
+        //dataSet.setPath("charts");
+        
+        return dataSet;
     }
 }

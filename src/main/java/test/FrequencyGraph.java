@@ -1,35 +1,23 @@
 
 package test;
 
-import analyse.Activity;
-import analyse.AnalysisResult;
-import analyse.FrequencyWrapper;
-import analyse.VADAnalysis;
+import analyse.FrequencySpectrum;
 import audio.Audio;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
-import static jdk.nashorn.tools.ShellFunctions.input;
-import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.transform.DftNormalization;
-import org.apache.commons.math3.transform.FastFourierTransformer;
-import org.apache.commons.math3.transform.TransformType;
 
 /**
  *
@@ -57,11 +45,11 @@ public class FrequencyGraph extends Application {
 
 
         int timeDomain = 441;//(int) (88200 + 110.3) ; // 2 seconds and something
-        FrequencyWrapper frequencyWrapper = new FrequencyWrapper(wav.getSampleRate());
+        FrequencySpectrum frequencyWrapper = new FrequencySpectrum(wav.getSampleRate());
         double[] doubleData = new double[frequencyWrapper.getWindowSize()];
         
         int[] amplitudes = wav.getAmplitudeWindow(timeDomain, frequencyWrapper.getWindowSize());
-        Map<Double, Double> frequencySpectrum = frequencyWrapper.getFrequencySpectrum(amplitudes); 
+        Map<Double, Double> frequencySpectrum = frequencyWrapper.getSpectrum(amplitudes); 
         
         frequencySpectrum.entrySet().forEach((entry) -> {
             series.getData().add(new XYChart.Data(Double.toString(entry.getKey()), entry.getValue()));

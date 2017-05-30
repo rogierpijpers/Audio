@@ -2,10 +2,9 @@
 package test;
 
 import analyse.AnalysisResult;
-import analyse.FrequencyWrapper;
+import analyse.FrequencySpectrum;
 import analyse.VADAnalysis;
 import audio.Audio;
-import chart.VADAnalysisChart;
 import java.io.File;
 import java.io.IOException;
 
@@ -33,6 +32,8 @@ public class Graph extends Application {
             case 1: return new File("resources\\pdd-4-1-1.wav");
             case 2: return new File("resources\\jennifer.wav");
             case 3: return new File("resources/ftdl_ppa_sande_spontansprache_gegenwart_ui.wav");
+            case 4: return new File("resources/ppa_sd.wav");
+            case 5: return new File("resources/ppa_pnfa.wav");
             default: return null;
         }
     }
@@ -40,7 +41,7 @@ public class Graph extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException, UnsupportedAudioFileException {
 
-        FlowPane root = new FlowPane();
+        StackPane root = new StackPane();
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
 
@@ -49,13 +50,13 @@ public class Graph extends Application {
         XYChart.Series series = new XYChart.Series();
         XYChart.Series series2 = new XYChart.Series();
         XYChart.Series series3 = new XYChart.Series();
-        XYChart.Series series4 = new XYChart.Series();
+//        XYChart.Series series4 = new XYChart.Series();
         
         final CategoryAxis barX = new CategoryAxis();
         final NumberAxis barY = new NumberAxis();
         BarChart<String, Number> barChart = new BarChart<>(barX, barY);
         
-        File file = getTestFile(1);
+        File file = getTestFile(4);
         
         Audio wav = new Audio(file);
         
@@ -69,9 +70,8 @@ public class Graph extends Application {
         int amplitudePeak = wav.getMaxAmplitude(0, wav.getNumberOfSamples());
         
         int frequencyWindowSize = 512;
-        FrequencyWrapper frequencyWrapper = new FrequencyWrapper(wav.getSampleRate(), frequencyWindowSize);
+       FrequencySpectrum frequencyWrapper = new FrequencySpectrum(wav.getSampleRate(), frequencyWindowSize);
         
-        VADAnalysisChart chart = new VADAnalysisChart(  );
         int[] amplitudeData = new int[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
         int[] envelopeData = new int[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
         int[] activityData = new int[(wav.getNumberOfSamples() / ((wav.getSampleRate() / 100) / 2)) + 1];
@@ -88,12 +88,12 @@ public class Graph extends Application {
             int yValue = activity[silenceIndex] ? amplitudePeak : 0;
             series3.getData().add(new XYChart.Data(timeValue, yValue));
             
-            if(i + frequencyWindowSize < wav.getNumberOfSamples()){
-                int[] amps = wav.getAmplitudeWindow(i, frequencyWindowSize);
-                double dominantFrequency = frequencyWrapper.getDominantFrequency(amps);
-                dominantFrequencyData[silenceIndex] = dominantFrequency;
-                series4.getData().add(new XYChart.Data(Integer.toString(timeValue), dominantFrequency));
-            }
+//            if(i + frequencyWindowSize < wav.getNumberOfSamples()){
+//                int[] amps = wav.getAmplitudeWindow(i, frequencyWindowSize);
+//                double dominantFrequency = frequencyWrapper.getDominantFrequency(amps);
+//                dominantFrequencyData[silenceIndex] = dominantFrequency;
+//                series4.getData().add(new XYChart.Data(Integer.toString(timeValue), dominantFrequency));
+//            }
             
             amplitudeData[silenceIndex] = wav.getAmplitude(i);
             envelopeData[silenceIndex] = amplitudeValue;
@@ -103,13 +103,6 @@ public class Graph extends Application {
             silenceIndex++;
         }     
         
-        chart.setAmplitudeData(amplitudeData);
-        chart.setEnvelopeData(envelopeData);
-        chart.setActivityData(activityData);
-        chart.setDominantFrequencyData(dominantFrequencyData);
-        
-        chart.chartToPNG();
-        
         System.out.println(result.getResultDescription());
         
         lineChart.getData().add(series);
@@ -118,8 +111,8 @@ public class Graph extends Application {
         series2.setName("Amplitude");
         lineChart.getData().add(series3);
         series3.setName("Voice Activity");
-        barChart.getData().add(series4);
-        series4.setName("Dominant Frequency");
+//        barChart.getData().add(series4);
+//        series4.setName("Dominant Frequency");
         
         root.getChildren().addAll(lineChart, barChart);
         
